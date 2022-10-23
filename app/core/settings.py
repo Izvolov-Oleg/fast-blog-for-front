@@ -21,6 +21,8 @@ class AppSettings(BaseAppSettings):
     title: str = "Secure_T test task"
     version: str = "1.0.0"
 
+    api_prefix: str = "/api"
+
     database_url: PostgresDsn
 
     server_host: str = "127.0.0.1"

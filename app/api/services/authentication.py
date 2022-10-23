@@ -5,18 +5,40 @@ from jose import jwt, JWTError
 from pydantic import ValidationError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from starlette.status import HTTP_400_BAD_REQUEST
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.database import get_session
+
+from app.api.dependencies.database import get_session
 from app.models.schemas.users import User, Token, UserCreate
 from app.core.settings import settings
-from .. import tables
+from app.db.repositories.users import UserRepository
+from app.db.errors import UserDoesNotExist
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/sign-in')
 
 
+# TODO перенести в depends
 def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     return AuthService.validate_token(token)
+
+
+async def check_username_is_exist(repo: UserRepository, username: str) -> bool:
+    try:
+        await repo.get_user_by_username(username=username)
+    except UserDoesNotExist:
+        return False
+
+    return True
+
+
+async def check_email_is_exist(repo: UserRepository, email: str) -> bool:
+    try:
+        await repo.get_user_by_email(email=email)
+    except UserDoesNotExist:
+        return False
+
+    return True
 
 
 class AuthService:
@@ -57,7 +79,7 @@ class AuthService:
         return user
 
     @classmethod
-    def create_token(cls, user: tables.User) -> Token:
+    def create_token(cls, user: User) -> Token:
         user_data = User.from_orm(user)
         now = datetime.utcnow()
 
@@ -76,36 +98,42 @@ class AuthService:
         return Token(access_token=token)
 
     def __init__(self, session: AsyncSession = Depends(get_session)):
-        self.session = session
+        self.repository = UserRepository(session)
 
     async def register_new_user(self, user_data: UserCreate) -> Token:
-        # создание нового пользователя через репо
+        if await check_username_is_exist(self.repository, user_data.username):
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="user with this username already exists"
+            )
 
+        if await check_email_is_exist(self.repository, user_data.email):
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="user with this email address already exists"
+            )
 
-        user = tables.User(
+        user = await self.repository.create_user(
             email=user_data.email,
             username=user_data.username,
-            password_hash=self.hash_password(user_data.password)
+            password=self.hash_password(user_data.password)
         )
-        self.session.add(user)
-        await self.session.commit()
-
         return self.create_token(user)
 
     async def authenticate_user(self, username: str, password: str) -> Token:
-        exception = HTTPException(
+        wrong_login_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect username or password',
             headers={
                 "WWW-Authenticate": "Bearer"
             }
         )
-        user = self.session.query(tables.User).filter(tables.User.username == username).first()
-        if not user:
-            raise exception
+        try:
+            user = await self.repository.get_user_by_username(username=username)
+        except UserDoesNotExist:
+            raise wrong_login_exception
 
         if not self.verify_password(password, user.password_hash):
-            raise exception
+            raise wrong_login_exception
 
         return self.create_token(user)
-
