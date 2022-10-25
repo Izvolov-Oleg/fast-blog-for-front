@@ -13,13 +13,13 @@ router = APIRouter()
 @router.post('/sign-up', response_model=Token)
 async def sign_up(user_data: UserCreate,
                   service: AuthService = Depends()):
-    return service.register_new_user(user_data)
+    return await service.register_new_user(user_data)
 
 
 @router.post('/sign-in', response_model=Token)
 async def sign_in(form_data: OAuth2PasswordRequestForm = Depends(),
                   service: AuthService = Depends()):
-    return service.authenticate_user(
+    return await service.authenticate_user(
         form_data.username,
         form_data.password
     )

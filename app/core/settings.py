@@ -1,9 +1,11 @@
 import logging
+import sys
 from typing import Any
 
 from pydantic import BaseSettings, PostgresDsn
 
-# from app.core.logging import InterceptHandler
+from loguru import logger
+from app.core.logging import InterceptHandler
 
 
 class BaseAppSettings(BaseSettings):
@@ -47,13 +49,13 @@ class AppSettings(BaseAppSettings):
             "version": self.version,
         }
 
-    # def configure_logging(self) -> None:
-    #     logging.getLogger().handlers = [InterceptHandler()]
-    #     for logger_name in self.loggers:
-    #         logging_logger = logging.getLogger(logger_name)
-    #         logging_logger.handlers = [InterceptHandler(level=self.logging_level)]
-    #
-    #     logger.configure(handlers=[{"sink": sys.stderr, "level": self.logging_level}])
+    def configure_logging(self) -> None:
+        logging.getLogger().handlers = [InterceptHandler()]
+        for logger_name in self.loggers:
+            logging_logger = logging.getLogger(logger_name)
+            logging_logger.handlers = [InterceptHandler(level=self.logging_level)]
+
+        logger.configure(handlers=[{"sink": sys.stderr, "level": self.logging_level}])
 
 
 settings = AppSettings()

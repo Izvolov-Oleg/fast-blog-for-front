@@ -8,19 +8,14 @@ from fastapi.security import OAuth2PasswordBearer
 from starlette.status import HTTP_400_BAD_REQUEST
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from app.api.dependencies.database import get_session
 from app.models.schemas.users import User, Token, UserCreate
 from app.core.settings import settings
 from app.db.repositories.users import UserRepository
 from app.db.errors import UserDoesNotExist
+from app.db import tables
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/sign-in')
-
-
-# TODO перенести в depends
-def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
-    return AuthService.validate_token(token)
 
 
 async def check_username_is_exist(repo: UserRepository, username: str) -> bool:
@@ -79,7 +74,7 @@ class AuthService:
         return user
 
     @classmethod
-    def create_token(cls, user: User) -> Token:
+    def create_token(cls, user: tables.User) -> Token:
         user_data = User.from_orm(user)
         now = datetime.utcnow()
 
@@ -133,7 +128,7 @@ class AuthService:
         except UserDoesNotExist:
             raise wrong_login_exception
 
-        if not self.verify_password(password, user.password_hash):
+        if not self.verify_password(password, user.password):
             raise wrong_login_exception
 
         return self.create_token(user)
