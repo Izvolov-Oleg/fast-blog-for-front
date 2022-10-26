@@ -30,7 +30,7 @@ async def get_all_posts(
     return await post_repo.get_all_posts(post_filters.limit, post_filters.offset)
 
 
-@router.get('/{post_id}/', response_model=PostReturnSchema)
+@router.get('/{post_id}/', response_model=PostWithCommentsSchema)
 async def get_post(
         post: PostWithCommentsSchema = Depends(get_post_by_id)
 ):
