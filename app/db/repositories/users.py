@@ -29,5 +29,3 @@ class UserRepository(BaseRepository):
         self.session.add(new_user)
         await self.session.commit()
         return new_user
-
-

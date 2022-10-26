@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    restart: on-failure
+    container_name: fastapi-microblog
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db/db_test"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:11.5-alpine
+    restart: on-failure
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_test
+
+

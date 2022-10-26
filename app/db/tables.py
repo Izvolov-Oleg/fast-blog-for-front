@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql.functions import func
 
 Base = declarative_base()
@@ -23,9 +23,9 @@ class Post(Base):
     author_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     content = sa.Column(sa.Text, nullable=False)
     created_at = sa.Column(sa.DateTime(timezone=True), server_default=func.now())
-    updated_at = sa.Column(sa.DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    comments = relationship("Comment")
+    updated_at = sa.Column(sa.DateTime(timezone=True),
+                           server_default=func.now(),
+                           onupdate=func.now())
 
 
 class Comment(Base):
@@ -35,8 +35,8 @@ class Comment(Base):
     author_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=False)
     content = sa.Column(sa.Text, nullable=False)
     created_at = sa.Column(sa.DateTime(timezone=True), server_default=func.now())
-    updated_at = sa.Column(sa.DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = sa.Column(sa.DateTime(timezone=True),
+                           server_default=func.now(),
+                           onupdate=func.now())
     post_id = sa.Column(sa.Integer, sa.ForeignKey("posts.id"))
     parent_id = sa.Column(sa.Integer, sa.ForeignKey('comments.id'))
-
-    comments = relationship("Comment")

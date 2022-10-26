@@ -1,11 +1,10 @@
 from datetime import datetime
 
 from pydantic import BaseModel
+from pydantic.class_validators import root_validator
 
 from app.models.schemas.users import User
-
-# class PostBase(BaseModel):
-#     content: str
+from app.models.schemas.comments import CommentWithChildren
 
 
 class PostCreateSchema(BaseModel):
@@ -13,16 +12,31 @@ class PostCreateSchema(BaseModel):
     content: str
 
 
-class PostSchema(BaseModel):
+class PostSchema(PostCreateSchema):
     id: int
-    title: str
-    author_id: int
-    content: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+
+class PostReturnSchema(PostSchema):
+    author_id: int
+
+
+class PostWithAuthorSchema(PostSchema):
+    author: User
+
+    @root_validator(pre=True)
+    def get_author(cls, values):
+        if not values.get('author'):
+            values['author'] = User(
+                id=values['author_id'],
+                username=values['username']
+            )
+        return values
+
+
+class PostWithCommentsSchema(PostWithAuthorSchema):
+    comments: list[CommentWithChildren] | None
 
 
 class PostFilters(BaseModel):
@@ -31,5 +45,9 @@ class PostFilters(BaseModel):
 
 
 class ListOfPosts(BaseModel):
-    posts: list[PostSchema]
-    posts_count: int
+    posts: list[PostWithAuthorSchema]
+    total: int
+
+
+class PostUpdateSchema(BaseModel):
+    content: str
