@@ -13,9 +13,11 @@ services:
       - .env
     depends_on:
       - db
+    volumes:
+      - ./app:/src/app
 
   db:
-    image: postgres:11.5-alpine
+    image: postgres:13.0-alpine
     restart: on-failure
     ports:
       - "5432:5432"
@@ -24,6 +26,6 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: db_test
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data:cached
+      - ./postgres-data:/var/lib/postgresql/data
 
 
