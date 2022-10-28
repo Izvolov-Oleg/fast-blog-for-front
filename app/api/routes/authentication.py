@@ -24,7 +24,3 @@ async def sign_in(form_data: OAuth2PasswordRequestForm = Depends(),
         form_data.password
     )
 
-# TODO
-# @router.get('/user', response_model=User)
-# def get_user(user: User = Depends(get_current_user)):
-#     return user

@@ -26,7 +26,6 @@ def get_post_filters(
 
 async def get_post_by_id(
         post_id: int = Path(...),
-        user: User = Depends(get_current_user),  # TODO ??
         post_repo: PostRepository = Depends(get_repository(PostRepository))
 ) -> PostWithCommentsSchema:
     try:
