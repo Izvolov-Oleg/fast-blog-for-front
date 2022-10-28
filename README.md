@@ -6,6 +6,6 @@
 ```shell
 docker-compose up -d
 ```
-Для работы с REST API перейти по адрессу host:port"/docs"
+Для работы со OpenAPI перейти по адрессу host:port"/docs"
 
 Позже добавлю документацию + тесты.
